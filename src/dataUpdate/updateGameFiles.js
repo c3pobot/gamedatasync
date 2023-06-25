@@ -1,15 +1,27 @@
 'use strict'
-const GameClient = require('./client')
+const GameClient = require('../client')
 const gitHubClient = require('../gitHubClient')
 const checkFile = require('../checkFile')
+const checkGitFileExists = require('../checkGitFileExists')
 const saveUnits = async(data = [], gameVersion, gitHubVersions = {}, repoFiles = [])=>{
   try{
     if(data.length === 0) return
-    let saveSuccess = 0
+    let saveSuccess = 0, uploadFile = true, gitFileExists
+    if(gitHubVersions['units.json'] === gameVersion) uploadFile = false
+    if(uploadFile === true && gitHubVersions['units.json']){
+      gitFileExists = await checkGitFileExists('units.json', gameVersion)
+      if(gitFileExists === true) uploadFile = false
+    }
     let units = await checkFile('units.json', gameVersion, data.filter(x=>x.obtainable === true && x.obtainableTime === "0"), (gitHubVersions['units.json'] !== gameVersion), repoFiles.find(x=>x.name === 'units.json')?.sha)
     if(units === true){
       gitHubVersions['units.json'] = gameVersion
       saveSuccess++
+    }
+    uploadFile = true
+    if(gitHubVersions['units_pve.json'] === gameVersion) uploadFile = false
+    if(uploadFile === true && gitHubVersions['units_pve.json']){
+      gitFileExists = await checkGitFileExists('units_pve.json', gameVersion)
+      if(gitFileExists === true) uploadFile = false
     }
     let units_pve = await checkFile('units_pve.json', gameVersion, data.filter(x=>x.obtainable !== true || x.obtainableTime !== "0"), (gitHubVersions['units_pve.json'] !== gameVersion), repoFiles.find(x=>x.name === 'units_pve.json')?.sha)
     if(units_pve === true){
@@ -36,7 +48,14 @@ const getSegment = async(gameDataSegment, gameVersion, gitHubVersions = {}, repo
         let units = await saveUnits(obj[i], gameVersion, gitHubVersions, repoFiles)
         if(units === true) saveSuccess++
       }else{
-        let status = await checkFile(i+'.json', gameVersion, obj[i], (gitHubVersions[i+'.json'] !== gameVersion), repoFiles.find(x=>x.name === i+'.json')?.sha)
+        let uploadFile = true
+        if(gitHubVersions[i+'.json'] === gameVersion) uploadFile = false
+        if(uploadFile === true){
+          let gitFileExists = await checkGitFileExists(i+'.json', gameVersion)
+          if(gitFileExists === true) uploadFile = false
+        }
+
+        let status = await checkFile(i+'.json', gameVersion, obj[i], uploadFile, repoFiles.find(x=>x.name === i+'.json')?.sha)
         if(status === true){
           gitHubVersions[i+'.json'] = gameVersion
           saveSuccess++
@@ -60,7 +79,7 @@ module.exports = async(gameVersion, gitHubVersions = {}, repoFiles = [])=>{
       gitHubVersions['enums.json'] = gameVersion
       saveSuccess++
     }
-    for(let x in gameEnums['GameDataSegment']){
+    for(let i in gameEnums['GameDataSegment']){
       count++;
       let status = await getSegment(gameEnums['GameDataSegment'][i], gameVersion, gitHubVersions, repoFiles)
       if(status) saveSuccess++

@@ -1,9 +1,10 @@
 'use strict'
+const fs = require('fs')
 const path = require('path')
-const fetch = require('./fetch')
 const readFile = require('./readFile')
 const saveGitFile = require('./saveGitFile')
 const DATA_PATH = process.env.DATA_PATH || path.join(baseDir, 'data')
+
 
 const checkLocalFile = async(file, version)=>{
   try{
@@ -21,10 +22,10 @@ const saveFile = async(file, version, data)=>{
     console.error(e);
   }
 }
-const githubSave =
-module.exports = async(file, version, data, push2git = true, sha)=>{
+module.exports = async(file, version, data, push2git, sha)=>{
   try{
     if(!file || !version || !data) return false
+    let uploadFile = true
     let status = await checkLocalFile(file, version)
     if(!status) status = saveFile(file, version, data)
     if(!status) return false

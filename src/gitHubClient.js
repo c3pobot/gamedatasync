@@ -5,9 +5,9 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN
 const GITHUB_REPO_URL = process.env.GITHUB_REPO_URL
 const USER_NAME = process.env.USER_NAME
 const USER_EMAIL = process.env.USER_EMAIL
-module.exports.push = async(data, fileName, commitMsg, sha, path)=>{
+module.exports.push = async(data, fileName, commitMsg, sha)=>{
   try{
-    if(!GITHUB_TOKEN || !GITHUB_REPO_URL) return
+    if(!GITHUB_TOKEN || !GITHUB_REPO_URL || !data || !fileName || !commitMsg) return
     const headers = {
       Authorization: "Bearer "+GITHUB_TOKEN,
       'Content-Type': 'application/json'
@@ -24,7 +24,6 @@ module.exports.push = async(data, fileName, commitMsg, sha, path)=>{
       compress: true,
       body: JSON.stringify(body)
     })
-    const resHeader = obj?.headers.get('content-type')
     return await obj?.json()
   }catch(e){
     console.error(e);

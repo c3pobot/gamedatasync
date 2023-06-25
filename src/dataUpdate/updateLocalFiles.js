@@ -1,7 +1,8 @@
 'use strict'
-const GameClient = require('./client')
+const GameClient = require('../client')
 const gitHubClient = require('../gitHubClient')
 const checkFile = require('../checkFile')
+const checkGitFileExists = require('../checkGitFileExists')
 const JSZip = require('jszip');
 const { createInterface } = require('readline');
 const { once } = require('events');
@@ -52,7 +53,13 @@ module.exports = async(localeVersion, gitHubVersions = {}, repoFiles = [])=>{
       let fileStream = content.nodeStream();
       let langMap = await processStreamByLine(fileStream);
       if(!langMap) continue;
-      let status = await checkFile(lang+'.json', localeVersion, langMap, (gitHubVersions[lang+'.json'] !== localeVersion), repoFiles.find(x=>x.name === 'units.json')?.sha)
+      let uploadFile = true
+      if(gitHubVersions[lang+'.json'] === localeVersion) uploadFile = false
+      if(uploadFile === true && gitHubVersions[lang+'.json']){
+        let gitFileExists = await checkGitFileExists(lang+'.json', localeVersion)
+        if(gitFileExists === true) uploadFile = false
+      }
+      let status = await checkFile(lang+'.json', localeVersion, langMap, uploadFile, repoFiles.find(x=>x.name === lang+'.json')?.sha)
       if(status) saveSuccess++
     }
     if(count > 0 && count === saveSuccess) return true

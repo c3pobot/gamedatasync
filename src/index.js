@@ -1,7 +1,8 @@
 'use strict'
+const dataVersions = { gameVersion: null, localeVersion: null, statCalcVersion: null }
 const path = require('path')
-const dataVersions = { gameVersion: null, localeVersion: null, statCalcVersion: null}
 const getGameVersions = require('./getGameVersions')
+const getDataVersions = require('./getDataVersions')
 const Fetch = require('./fetch')
 const GITHUB_REPO_RAW_URL = process.env.GITHUB_REPO_RAW_URL || 'https://raw.githubusercontent.com/c3pobot/gamedata/main/'
 //const GITHUB_REPO_RAW_URL = process.env.GITHUB_REPO_RAW_URL || 'https://raw.githubusercontent.com/swgoh-utils/gamedata/main'
@@ -13,7 +14,7 @@ const checkAPIReady = async()=>{
     const obj = await getGameVersions()
     if(obj?.gameVersion){
       console.log('SWGOH API is ready ...')
-      StartSync()
+      GetIntialVersions()
     }else{
       console.log('SWGOH API is not ready. Will try again in 5 seconds ...')
       setTimeout(checkAPIReady, 5000)
@@ -21,6 +22,18 @@ const checkAPIReady = async()=>{
   }catch(e){
     console.error(e);
     setTimeout(checkAPIReady, 5000)
+  }
+}
+const GetIntialVersions = async()=>{
+  try{
+    let data = await getDataVersions()
+    if(data?.gameVersion) dataVersions.gameVersion = data.gameVersion
+    if(data?.localeVersion) dataVersions.localeVersion = data.localeVersion
+    if(data?.statCalcVersion) dataVersions.statCalcVersion = data.statCalcVersion
+    StartSync()
+  }catch(e){
+    console.error(e);
+    StartSync()
   }
 }
 const StartSync = async()=>{
@@ -34,30 +47,22 @@ const StartSync = async()=>{
 }
 const CheckVersions = async()=>{
   try{
-    let obj = await getGameVersions(), gameDataNeeded = false, statCalcDataNeeded = false
+    let gameDataNeeded = false, statCalcDataNeeded = false
+    let obj = await getGameVersions()
     if(!obj?.gameVersion || !obj?.localeVersion) return
-    if(dataVersions.gameVersion !== obj.gameVersion || dataVersions.localeVersion !== obj.localeVersion) gameDataNeeded = true
-    if(dataVersions.statCalcVersion !== obj.gameVersion || dataVersions.localeVersion !== obj.localeVersion) statCalcDataNeeded = true
-    let gitHubVersions = await Fetch(path.join(GITHUB_REPO_RAW_URL, 'versions.json'))
-    if(gitHubVersions?.gameVersion || gitHubVersions?.localeVersion){
-      if(gitHubVersions.gameVersion === obj.gameVersion && gitHubVersions.localeVersion === obj.localeVersion) gameDataNeeded = false
-      if(gitHubVersions.gameVersion === obj.gameVersion) dataVersions.gameVersion = gitHubVersions.gameVersion
-      if(gitHubVersions.localeVersion === obj.localeVersion) dataVersions.localeVersion = gitHubVersions.localeVersion
-      if(gitHubVersions['gameData.json'] === obj.gameVersion){
-        statCalcDataNeeded = false
-        dataVersions.statCalcVersion = gitHubVersions['gameData.json']
-      }
-    }
+    if(dataVersions.gameVersion === obj.gameVersion && dataVersions.localeVersion === obj.localeVersion && dataVersions.statCalcVersion === obj.gameVersion) return
+    let gitVersions = await getDataVersions()
+    if(gitVersions) gitVersions = gitVersions.gitVersions
+    if(!gitVersions) gitVersions = {}
+    if(dataVersions.gameVersion !== obj.gameVersion) gameDataNeeded = true
+    if(dataVersions.localeVersion !== obj.localeVersion) gameDataNeeded = true
+    if(dataVersions.statCalcVersion !== obj.gameVersion) gameDataNeeded = true
     if(gameDataNeeded){
-      let { gameVersion, localeVersion } = await dataUpdate(obj.gameVersion, obj.localeVersion, JSON.parse(JSON.stringify(gitHubVersions)))
+      let { gameVersion, localeVersion, statCalcVersion } = await dataUpdate(obj.gameVersion, obj.localeVersion, JSON.parse(JSON.stringify(gitVersions)))
       if(gameVersion) dataVersions.gameVersion = gameVersion
       if(localeVersion) dataVersions.localeVersion = localeVersion
-    }
-    if(statCalcDataNeeded ){
-      let statCalcVersion = await dataBuilder(obj.gameVersion, obj.localeVersion, JSON.parse(JSON.stringify(gitHubVersions)))
       if(statCalcVersion) dataVersions.statCalcVersion = statCalcVersion
     }
-    console.log(dataVersions)
   }catch(e){
     console.error(e);
   }
