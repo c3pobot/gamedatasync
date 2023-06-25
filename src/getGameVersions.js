@@ -1,11 +1,9 @@
 'use strict'
-const path = require('path')
-const Fetch = require('./fetch')
-const GAME_API_URI = process.env.CLIENT_URL
+const GameClient = require('./client')
 module.exports = async()=>{
   try{
     let res = {gameVersion: null, localeVersion: null}
-    const obj = await Fetch.json(path.join(GAME_API_URI, 'metadata'), 'POST', {})
+    const obj = await GameClient.getMetaData()
     if(obj?.latestGamedataVersion) res.gameVersion = obj.latestGamedataVersion
     if(obj?.latestLocalizationBundleVersion) res.localeVersion = obj.latestLocalizationBundleVersion
     return res

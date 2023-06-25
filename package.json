@@ -11,6 +11,8 @@
   "author": "scuba75",
   "license": "ISC",
   "dependencies": {
+    "@swgoh-utils/comlink": "^1.4.1",
+    "jszip": "^3.10.1",
     "node-fetch": "^2.6.7"
   }
 }

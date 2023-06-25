@@ -1,5 +1,5 @@
 'use strict'
-module.exports = async(gameVersion, localeVersion)=>{
+module.exports = async(gameVersion, localeVersion, gitHubVersions = {})=>{
   try{
     if(!gameVersion || !localeVersion) return
     console.log('updating gameData.json')
