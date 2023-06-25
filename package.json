@@ -1,0 +1,16 @@
+{
+  "name": "gamedatasync",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "chmod a+x buildtestimage.sh && ./buildtestimage.sh c3pobot/gamedatasync",
+    "prod": "chmod a+x buildprodimage.sh && ./buildprodimage.sh c3pobot/gamedatasync"
+  },
+  "author": "scuba75",
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  }
+}
