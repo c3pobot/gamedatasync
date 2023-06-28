@@ -6,7 +6,7 @@ const saveGitFile = require('../saveGitFile')
 const dataBuilder = require('../dataBuilder')
 module.exports = async(gameVersion, localeVersion, assetVersion, gitHubVersions = {})=>{
   try{
-    let oldAssetVersion = gitVersions.assetVersion
+    let oldAssetVersion = gitHubVersions.assetVersion
     delete gitHubVersions.assetVersion
     let res = {gameVersion: null, localeVersion: null, statCalcVersion: null }, oldGameVersion = gitHubVersions['gameVersion'], oldLocalVersion = gitHubVersions['localeVersion'], oldStatCalcVersion = gitHubVersions['gameData.json'], status = false
     if(!gameVersion || !localeVersion) return res
