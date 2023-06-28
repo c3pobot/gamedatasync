@@ -4,8 +4,10 @@ const updateGameFiles = require('./updateGameFiles')
 const updateLocalFiles = require('./updateLocalFiles')
 const saveGitFile = require('../saveGitFile')
 const dataBuilder = require('../dataBuilder')
-module.exports = async(gameVersion, localeVersion, gitHubVersions = {})=>{
+module.exports = async(gameVersion, localeVersion, assetVersion, gitHubVersions = {})=>{
   try{
+    let oldAssetVersion = gitVersions.assetVersion
+    delete gitHubVersions.assetVersion
     let res = {gameVersion: null, localeVersion: null, statCalcVersion: null }, oldGameVersion = gitHubVersions['gameVersion'], oldLocalVersion = gitHubVersions['localeVersion'], oldStatCalcVersion = gitHubVersions['gameData.json'], status = false
     if(!gameVersion || !localeVersion) return res
     let repoFiles = await gitHubClient.getRepoFiles()
@@ -21,6 +23,11 @@ module.exports = async(gameVersion, localeVersion, gitHubVersions = {})=>{
     if(gitHubVersions['gameData.json'] !== gameVersion){
       status = await dataBuilder(gameVersion, gitHubVersions, repoFiles)
       if(status === true) gitHubVersions['gameData.json'] = gameVersion
+    }
+    if(gameVersion === gitVersions.gameVersion && localeVersion === gitVersions.localeVersion){
+      gitHubVersions.assetVersion = assetVersion
+    }else{
+      gitVersions.assetVersion = oldAssetVersion
     }
     let obj = await saveGitFile(gitHubVersions, 'versions.json', gameVersion, repoFiles?.find(x=>x.name === 'versions.json')?.sha)
     if(obj?.content?.sha){

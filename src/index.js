@@ -58,7 +58,7 @@ const CheckVersions = async()=>{
     if(dataVersions.localeVersion !== obj.localeVersion) gameDataNeeded = true
     if(dataVersions.statCalcVersion !== obj.gameVersion) gameDataNeeded = true
     if(gameDataNeeded){
-      let { gameVersion, localeVersion, statCalcVersion } = await dataUpdate(obj.gameVersion, obj.localeVersion, JSON.parse(JSON.stringify(gitVersions)))
+      let { gameVersion, localeVersion, statCalcVersion } = await dataUpdate(obj.gameVersion, obj.localeVersion, obj.assetVersion, JSON.parse(JSON.stringify(gitVersions)))
       if(gameVersion) dataVersions.gameVersion = gameVersion
       if(localeVersion) dataVersions.localeVersion = localeVersion
       if(statCalcVersion) dataVersions.statCalcVersion = statCalcVersion
