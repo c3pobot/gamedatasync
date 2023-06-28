@@ -43,6 +43,6 @@ module.exports = async(gameVersion, localeVersion, assetVersion, gitHubVersions 
     }
     return res
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }
