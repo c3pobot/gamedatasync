@@ -9,6 +9,6 @@ module.exports = async()=>{
     if(obj?.assetVersion) res.assetVersion = obj.assetVersion
     return res
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }

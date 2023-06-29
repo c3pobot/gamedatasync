@@ -60,10 +60,13 @@ module.exports = async(localeVersion, gitHubVersions = {}, repoFiles = [])=>{
         if(gitFileExists === true) uploadFile = false
       }
       let status = await checkFile(lang+'.json', localeVersion, langMap, uploadFile, repoFiles.find(x=>x.name === lang+'.json')?.sha)
-      if(status) saveSuccess++
+      if(status === true){
+        gitHubVersions[lang+'.json'] =  localeVersion
+        saveSuccess++
+      }
     }
     if(count > 0 && count === saveSuccess) return true
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }

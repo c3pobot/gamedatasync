@@ -25,6 +25,6 @@ module.exports = async(gameVersion) =>{
     }
     if(count > 0 && count === +gameDataFilesNeeded.length) return data
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }

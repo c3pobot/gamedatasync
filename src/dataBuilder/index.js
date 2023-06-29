@@ -1,6 +1,5 @@
 'use strict'
 const path = require('path')
-const gitHubClient = require('../gitHubClient')
 const checkFile = require('../checkFile')
 const getDataFiles = require('./getDataFiles')
 const buildData = require('./buildData')
@@ -12,7 +11,7 @@ module.exports = async(gameVersion, gitHubVersions = {}, repoFiles = [])=>{
   try{
     if(!gameVersion) return
     console.log('creating gameData.json for version '+gameVersion)
-    let uploadFile = true, status, oldStatCalcVersion = gitHubVersions['gameData.json'], gameData
+    let uploadFile = true, status, gameData
     if(gitHubVersions['gameData.json']) gameData = await Fetch(path.join(GITHUB_REPO_RAW_URL, 'gameData.json'))
     if(gameData?.version && gameData?.data && gameData.version === gameVersion){
       uploadFile = false
@@ -24,16 +23,14 @@ module.exports = async(gameVersion, gitHubVersions = {}, repoFiles = [])=>{
       gameData = await buildData(data)
     }
     if(gameData) status = await checkFile('gameData.json', gameVersion, gameData, uploadFile, repoFiles.find(x=>x.name === 'gameData.json')?.sha)
-    if(status) gitHubVersions['gameData.json'] = gameVersion
-    let obj = await saveGitFile(gitHubVersions, 'versions.json', gameVersion, repoFiles?.find(x=>x.name === 'versions.json')?.sha)
-    if(obj?.content?.sha){
+    console.log(status)
+    if(status === true){
       console.log('gameData.json updated to version '+gameVersion+'...')
       return true
     }else{
       console.log('error updating gameData.json')
-      return false
     }
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }

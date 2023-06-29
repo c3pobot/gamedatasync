@@ -30,7 +30,7 @@ const saveUnits = async(data = [], gameVersion, gitHubVersions = {}, repoFiles =
     }
     if(saveSuccess === 2) return true
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }
 const getSegment = async(gameDataSegment, gameVersion, gitHubVersions = {}, repoFiles = [])=>{
@@ -64,7 +64,7 @@ const getSegment = async(gameDataSegment, gameVersion, gitHubVersions = {}, repo
     }
     if(count > 0 && count === saveSuccess) return true
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }
 module.exports = async(gameVersion, gitHubVersions = {}, repoFiles = [])=>{
@@ -86,6 +86,6 @@ module.exports = async(gameVersion, gitHubVersions = {}, repoFiles = [])=>{
     }
     if(count > Object.values(enumStatus).length && count === saveSuccess) return true
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }
