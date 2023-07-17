@@ -1,6 +1,5 @@
 'use strict'
 const GameClient = require('../client')
-const gitHubClient = require('../gitHubClient')
 const checkFile = require('../checkFile')
 const checkGitFileExists = require('../checkGitFileExists')
 const saveUnits = async(data = [], gameVersion, gitHubVersions = {}, repoFiles = [])=>{
