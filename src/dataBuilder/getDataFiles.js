@@ -1,14 +1,15 @@
 'use strict'
+const fs = require('fs')
 const path = require('path')
-const Fetch = require('../fetch')
-const GITHUB_REPO_RAW_URL = process.env.GITHUB_REPO_RAW_URL || 'https://raw.githubusercontent.com/swgoh-utils/gamedata/main'
+const log = require('../logger')
 const gameDataFilesNeeded = ['equipment', 'relicTierDefinition', 'skill', 'statModSet', 'statProgression', 'table', 'units', 'xpTable']
 const getDataFile = async(file, version)=>{
   try{
-    let obj = await Fetch(path.join(GITHUB_REPO_RAW_URL, file))
+    let obj = await fs.readFileSync(path.join(baseDir, 'data', file))
+    if(obj) obj = JSON.parse(obj)
     if(obj?.version && obj?.data && obj?.version === version) return obj.data
   }catch(e){
-    console.error(e);
+    log.error(e);
   }
 }
 module.exports = async(gameVersion) =>{

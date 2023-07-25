@@ -1,49 +1,57 @@
 'use strict'
-const gitHubClient = require('../gitHubClient')
+const fs = require('fs')
+const path = require('path')
+const log = require('../logger')
+const { dataVersions } = require('../dataVersions')
+const s3client = require('../s3client')
 const updateGameFiles = require('./updateGameFiles')
 const updateLocalFiles = require('./updateLocalFiles')
-const saveGitFile = require('../saveGitFile')
 const dataBuilder = require('../dataBuilder')
-module.exports = async(gameVersion, localeVersion, assetVersion, gitHubVersions = {})=>{
+const saveVersionFile = async(data = {})=>{
   try{
-    let oldAssetVersion = gitHubVersions.assetVersion, oldGameVersion = gitHubVersions.gameVersion, oldLocalVersion = gitHubVersions.localeVersion, oldStatCalcVersion = gitHubVersions['gameData.json']
-    delete gitHubVersions.assetVersion
-    let res = {gameVersion: null, localeVersion: null, statCalcVersion: null, assetVersion: null  }
+    await fs.writeFileSync(path.join(baseDir, 'data', 'version.json'))
+    return await s3client.put('versions.json', data) 
+  }catch(e){
+    throw(e)
+  }
+}
+module.exports = async(gameVersion, localeVersion, assetVersion, s3Versions = {})=>{
+  try{
+    let oldAssetVersion = s3Versions.assetVersion, oldGameVersion = s3Versions.gameVersion, oldLocalVersion = s3Versions.localeVersion, oldStatCalcVersion = s3Versions['gameData.json']
+    delete s3Versions.assetVersion
     let status = false
     if(!gameVersion || !localeVersion || !assetVersion) return
-    let repoFiles = await gitHubClient.getRepoFiles()
-    console.log('updating game data files...')
-    if(gitHubVersions['gameVersion'] !== gameVersion){
-      status = await updateGameFiles(gameVersion, gitHubVersions, repoFiles)
-      if(status === true) gitHubVersions.gameVersion = gameVersion
+    log.info('updating game data files...')
+    if(s3Versions['gameVersion'] !== gameVersion){
+      status = await updateGameFiles(gameVersion, s3Versions)
+      if(status === true) s3Versions.gameVersion = gameVersion
     }
-    if(gitHubVersions['localeVersion'] !== localeVersion){
-      status = await updateLocalFiles(localeVersion, gitHubVersions, repoFiles)
-      if(status === true) gitHubVersions.localeVersion = localeVersion
+    if(s3Versions['localeVersion'] !== localeVersion){
+      status = await updateLocalFiles(localeVersion, s3Versions)
+      if(status === true) s3Versions.localeVersion = localeVersion
     }
-    if(gitHubVersions['gameData.json'] !== gameVersion || !gitHubVersions['gameData.json']){
-      status = await dataBuilder(gameVersion, gitHubVersions, repoFiles)
-      if(status === true) gitHubVersions['gameData.json'] = gameVersion
+    if(s3Versions['gameData.json'] !== gameVersion || !s3Versions['gameData.json']){
+      status = await dataBuilder(gameVersion, s3Versions)
+      if(status === true) s3Versions['gameData.json'] = gameVersion
     }
-    if(gameVersion === gitHubVersions.gameVersion && localeVersion === gitHubVersions.localeVersion){
-      gitHubVersions.assetVersion = assetVersion
+    if(gameVersion === s3Versions.gameVersion && localeVersion === s3Versions.localeVersion){
+      s3Versions.assetVersion = assetVersion
     }else{
-      gitHubVersions.assetVersion = oldAssetVersion
+      s3Versions.assetVersion = oldAssetVersion
     }
-    let obj = await saveGitFile(gitHubVersions, 'versions.json', gameVersion, repoFiles?.find(x=>x.name === 'versions.json')?.sha)
-    if(obj?.content?.sha){
-      console.log('game files updated to version '+gitHubVersions['gameVersion']+'. Locale files updated to version '+gitHubVersions['localeVersion']+'...')
-      res.gameVersion = gitHubVersions.gameVersion
-      res.localeVersion = gitHubVersions.localeVersion
-      res.statCalcVersion = gitHubVersions['gameData.json']
-      res.assetVersion = gitHubVersions.assetVersion
+    let obj = await saveVersionFile(s3Versions)
+    if(obj?.ETag){
+      log.info('game files updated to version '+s3Versions['gameVersion']+'. Locale files updated to version '+s3Versions['localeVersion']+'...')
+      dataVersions.gameVersion = s3Versions.gameVersion
+      dataVersions.localeVersion = s3Versions.localeVersion
+      dataVersions.statCalcVersion = s3Versions['gameData.json']
+      dataVersions.assetVersion = s3Versions.assetVersion
     }else{
-      console.log('error updating game and locale files...')
-      res.gameVersion = oldGameVersion
-      res.localeVersion = oldLocalVersion
-      res.statCalcVersion = oldStatCalcVersion
+      log.error('error updating game and locale files...')
+      dataVersions.gameVersion = oldGameVersion
+      dataVersions.localeVersion = oldLocalVersion
+      dataVersions.statCalcVersion = oldStatCalcVersion
     }
-    return res
   }catch(e){
     throw(e);
   }

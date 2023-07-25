@@ -1,8 +1,8 @@
 'use strict'
+const log = require('../logger')
 const GameClient = require('../client')
-const gitHubClient = require('../gitHubClient')
-const checkFile = require('../checkFile')
-const checkGitFileExists = require('../checkGitFileExists')
+const saveFile = require('../saveFile')
+
 const JSZip = require('jszip');
 const { createInterface } = require('readline');
 const { once } = require('events');
@@ -37,10 +37,10 @@ const processLocalizationLine = (line) => {
   val = val.replace(/^\[[0-9A-F]*?\](.*)\s+\(([A-Z]+)\)\[-\]$/, (m,p1,p2) => p1);
   return [key, val];
 }
-module.exports = async(localeVersion, gitHubVersions = {}, repoFiles = [])=>{
+module.exports = async(localeVersion, s3Versions = {})=>{
   try{
     if(!localeVersion) return
-    console.log('Uploading locale files for version '+localeVersion+' to github ...')
+    log.info('Uploading locale files for version '+localeVersion+' to object storage ...')
     let count = 0, saveSuccess = 0
     let localeFiles = await GameClient.getLocalizationBundle(localeVersion, false)
     if(!localeFiles) return
@@ -53,15 +53,9 @@ module.exports = async(localeVersion, gitHubVersions = {}, repoFiles = [])=>{
       let fileStream = content.nodeStream();
       let langMap = await processStreamByLine(fileStream);
       if(!langMap) continue;
-      let uploadFile = true
-      if(gitHubVersions[lang+'.json'] === localeVersion) uploadFile = false
-      if(uploadFile === true && gitHubVersions[lang+'.json']){
-        let gitFileExists = await checkGitFileExists(lang+'.json', localeVersion)
-        if(gitFileExists === true) uploadFile = false
-      }
-      let status = await checkFile(lang+'.json', localeVersion, langMap, uploadFile, repoFiles.find(x=>x.name === lang+'.json')?.sha)
+      let status = await saveFile(lang+'.json', localeVersion, langMap)
       if(status === true){
-        gitHubVersions[lang+'.json'] =  localeVersion
+        s3Versions[lang+'.json'] =  localeVersion
         saveSuccess++
       }
     }

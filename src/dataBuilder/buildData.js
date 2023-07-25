@@ -1,4 +1,5 @@
 'use strict'
+const log = require('../logger')
 const statEnumMap = require('./statEnumMap.json');
 const statEnum = {};
 const localizationMap = {};
@@ -12,7 +13,7 @@ for (const [key, value] of Object.entries(statEnumMap)) {
 }
 module.exports = async(data = {})=>{
   try{
-    console.log('Building gameData.json')
+    log.info('Building gameData.json')
     const gameData = {}
     const statTables = buildStatProgressionList(data.statProgression);
     gameData.modSetData = buildModSetData(data.statModSet);
@@ -25,7 +26,7 @@ module.exports = async(data = {})=>{
     gameData.unitData = buildUnitData(data.units, data.skill, statTables);
     if(Object.values(gameData)?.length === 6) return gameData
   }catch(e){
-    console.error(e);
+    log.error(e);
   }
 }
 function getMasteryMultiplierName(primaryStatID, tags) {

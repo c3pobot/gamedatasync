@@ -5,7 +5,7 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN
 const GITHUB_REPO_URL = process.env.GITHUB_REPO_URL
 const USER_NAME = process.env.USER_NAME
 const USER_EMAIL = process.env.USER_EMAIL
-module.exports.push = async(data, fileName, commitMsg, sha)=>{
+module.exports.push = async(fileName, data, commitMsg, sha)=>{
   try{
     if(!GITHUB_TOKEN || !GITHUB_REPO_URL || !data || !fileName || !commitMsg) return
     const headers = {
