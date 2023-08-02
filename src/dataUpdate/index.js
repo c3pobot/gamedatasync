@@ -9,8 +9,8 @@ const updateLocalFiles = require('./updateLocalFiles')
 const dataBuilder = require('../dataBuilder')
 const saveVersionFile = async(data = {})=>{
   try{
-    await fs.writeFileSync(path.join(baseDir, 'data', 'version.json'))
-    return await s3client.put('versions.json', data) 
+    await fs.writeFileSync(path.join(baseDir, 'data', 'versions.json'), JSON.stringify(data))
+    return await s3client.put('versions.json', data)
   }catch(e){
     throw(e)
   }
@@ -39,6 +39,7 @@ module.exports = async(gameVersion, localeVersion, assetVersion, s3Versions = {}
     }else{
       s3Versions.assetVersion = oldAssetVersion
     }
+    console.log(s3Versions)
     let obj = await saveVersionFile(s3Versions)
     if(obj?.ETag){
       log.info('game files updated to version '+s3Versions['gameVersion']+'. Locale files updated to version '+s3Versions['localeVersion']+'...')
